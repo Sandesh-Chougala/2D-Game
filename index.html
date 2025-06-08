@@ -2,215 +2,242 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>THt Shooter Modern</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Space Shooter 2D with 3D Starfield & Firebase Leaderboard</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
-
   * {
     box-sizing: border-box;
   }
-
-  html, body {
-    margin: 0; padding: 0; height: 100%;
-    background: #0e0f1a;
-    font-family: 'Orbitron', sans-serif;
+  body, html {
+    margin: 0; padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #000011;
     color: #0ff;
     overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
     user-select: none;
   }
-
-  #container {
+  #appContainer {
     position: relative;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    touch-action: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-
-  canvas {
-    background: linear-gradient(135deg, #00111f, #002f5a);
-    display: block;
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-    image-rendering: pixelated;
-  }
-
-  /* UI */
-
-  #mainMenu, #gameOverScreen {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(4,12,28,0.85);
-    border-radius: 20px;
-    padding: 30px 40px;
-    box-shadow:
-      0 0 10px #00ffffaa,
-      0 0 30px #00ffff44 inset;
-    width: 90vw;
-    max-width: 320px;
+  #mainMenu {
+    background: rgba(0,0,0,0.85);
+    padding: 24px 28px;
+    border-radius: 12px;
+    box-shadow: 0 0 18px #0ff;
     text-align: center;
-    z-index: 20;
-  }
-  #mainMenu h1, #gameOverScreen h1 {
-    font-size: 3.2rem;
-    margin-bottom: 20px;
-    letter-spacing: 5px;
-    text-shadow: 0 0 8px #00ffffcc;
-  }
-
-  button {
-    font-family: 'Orbitron', monospace;
-    font-size: 1.6rem;
-    font-weight: 700;
-    padding: 18px 0;
-    border-radius: 30px;
-    border: none;
-    background: linear-gradient(90deg, #00ffffcc 0%, #005566cc 100%);
-    color: #002d2d;
-    cursor: pointer;
-    box-shadow:
-      0 0 10px #00ffffcc,
-      0 0 30px #00ffff66 inset;
-    width: 100%;
-    transition: background 0.3s ease, color 0.3s ease;
+    width: 320px;
     user-select: none;
-    outline-offset: 4px;
+    z-index: 100;
   }
-  button:active, button:hover {
-    background: linear-gradient(90deg, #00ffffee 0%, #0088aaee 100%);
-    color: #001f1f;
+  #mainMenu h1 {
+    margin: 0 0 18px;
+    font-weight: 700;
+    font-size: 2.4rem;
+    letter-spacing: 3px;
+    color: #0ff;
   }
-
+  #startBtn {
+    font-size: 1.4rem;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 10px;
+    background: #0ff;
+    color: #000;
+    cursor: pointer;
+    transition: background 0.25s ease;
+    margin-bottom: 24px;
+    font-weight: 700;
+    width: 100%;
+  }
+  #startBtn:hover {
+    background: #06c;
+    color: #fff;
+  }
   #leaderboard {
-    margin-top: 25px;
-    max-height: 160px;
+    max-height: 220px;
     overflow-y: auto;
-    border-top: 2px solid #00ffff88;
-    padding-top: 14px;
+    border-top: 2px solid #0ff;
+    padding-top: 16px;
+    text-align: left;
   }
   #leaderboard h2 {
-    margin: 0 0 14px 0;
+    margin: 0 0 12px;
     font-weight: 700;
-    font-size: 1.3rem;
-    text-shadow: 0 0 6px #00ffff99;
+    font-size: 1.4rem;
+    color: #0ff;
   }
   #leaderboard ul {
     list-style: none;
-    padding-left: 0;
+    padding: 0;
     margin: 0;
-    font-size: 1.1rem;
-    color: #00ffffcc;
+    font-size: 1rem;
   }
   #leaderboard li {
     padding: 6px 0;
-    border-bottom: 1px solid #00ffff44;
+    border-bottom: 1px solid #0ff33a;
   }
-
-  /* HUD */
-  #hud {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 1.8rem;
-    font-weight: 700;
-    text-shadow: 0 0 8px #00ffffbb;
+  #gameScreen {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    overflow: hidden;
     user-select: none;
-    pointer-events: none;
-    z-index: 15;
   }
-  #hud span {
-    background: rgba(0,255,255,0.15);
-    padding: 8px 14px;
-    border-radius: 16px;
-    min-width: 90px;
+  canvas {
+    display: block;
+    border-radius: 12px;
+    margin: auto;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+  }
+  #scoreDisplay {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-size: 1.5rem;
+    background: rgba(0,0,0,0.7);
+    padding: 8px 16px;
+    border-radius: 10px;
+    color: #0ff;
+    font-weight: 700;
+    user-select: none;
+    min-width: 130px;
     text-align: center;
+    box-shadow: 0 0 8px #0ff;
+    z-index: 10;
   }
-  #hud .health {
-    background: rgba(255, 0, 0, 0.25);
-    color: #ff4b4b;
-    text-shadow: 0 0 10px #ff4b4bbb;
-  }
-
-  /* Mobile touch controls overlay */
-  #touchControls {
+  #healthDisplay {
     position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 12px;
-    z-index: 25;
-  }
-  #shootButton {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: #00ffffaa;
-    box-shadow:
-      0 0 15px #00ffffcc,
-      0 0 40px #00ffff88 inset;
-    border: none;
-    font-size: 2rem;
+    top: 60px;
+    right: 14px;
+    font-size: 1.5rem;
+    background: rgba(0,0,0,0.7);
+    padding: 8px 16px;
+    border-radius: 10px;
+    color: #f33;
     font-weight: 700;
-    color: #002d2d;
     user-select: none;
+    min-width: 130px;
+    text-align: center;
+    box-shadow: 0 0 8px #f33;
+    z-index: 10;
+  }
+  #gameOverScreen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.9);
+    padding: 36px 48px;
+    border-radius: 20px;
+    text-align: center;
+    display: none;
+    max-width: 90vw;
+    box-shadow: 0 0 24px #f33;
+    z-index: 20;
+  }
+  #gameOverScreen h2 {
+    color: #f33;
+    margin-bottom: 22px;
+    font-size: 2.2rem;
+    font-weight: 800;
+  }
+  #gameOverScreen p {
+    font-size: 1.2rem;
+    margin-bottom: 28px;
+  }
+  #gameOverScreen button {
+    padding: 14px 36px;
+    font-size: 1.3rem;
+    border: none;
+    border-radius: 12px;
+    background: #0ff;
+    color: #000;
     cursor: pointer;
-    outline-offset: 4px;
+    font-weight: 700;
+    box-shadow: 0 0 10px #0ff;
     transition: background 0.3s ease;
   }
-  #shootButton:active {
-    background: #00ffffee;
-    box-shadow:
-      0 0 20px #00ffffff,
-      0 0 50px #00ffffcc inset;
+  #gameOverScreen button:hover {
+    background: #06c;
+    color: #fff;
   }
-
+  /* Mobile shoot button */
+  #shootBtn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: #0ff;
+    border: none;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #000;
+    cursor: pointer;
+    box-shadow: 0 0 15px #0ff;
+    display: none; /* only show on mobile */
+    user-select: none;
+    z-index: 15;
+  }
+  #shootBtn:active {
+    background: #06c;
+    color: #fff;
+  }
+  /* Responsive */
+  @media (max-width: 700px) {
+    #shootBtn {
+      display: block;
+    }
+  }
 </style>
 </head>
 <body>
 
-<div id="container">
-
+<div id="appContainer">
+  <!-- MAIN MENU -->
   <div id="mainMenu">
-    <h1>THt Shooter</h1>
+    <h1>Space Shooter</h1>
     <button id="startBtn">Start Game</button>
+
     <div id="leaderboard">
       <h2>Leaderboard</h2>
-      <ul id="leaderboardList"><li>Loading...</li></ul>
+      <ul id="leaderboardList">
+        <li>Loading...</li>
+      </ul>
     </div>
   </div>
 
-  <canvas id="gameCanvas"></canvas>
-
-  <div id="hud" style="display:none;">
-    <span id="scoreDisplay">Score: 0</span>
-    <span id="healthDisplay" class="health">Health: 3</span>
+  <!-- GAME SCREEN -->
+  <div id="gameScreen">
+    <canvas id="gameCanvas"></canvas>
+    <div id="scoreDisplay">Score: 0</div>
+    <div id="healthDisplay">Health: 3</div>
+    <div id="gameOverScreen">
+      <h2>Game Over</h2>
+      <p id="finalScoreText"></p>
+      <button id="restartBtn">Play Again</button>
+    </div>
+    <button id="shootBtn">●</button>
   </div>
-
-  <div id="gameOverScreen" style="display:none;">
-    <h1>Game Over</h1>
-    <p id="finalScoreText"></p>
-    <button id="restartBtn">Play Again</button>
-  </div>
-
-  <div id="touchControls" style="display:none;">
-    <button id="shootButton">●</button>
-  </div>
-
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
 <script>
+  // Firebase config and init
   const firebaseConfig = {
     apiKey: "AIzaSyA7X85cqiIAVxa5EuKeZDDg8hfAL_5-tn8",
     authDomain: "dgame-aa237.firebaseapp.com",
@@ -223,383 +250,344 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  const container = document.getElementById('container');
+  // DOM Elements
   const mainMenu = document.getElementById('mainMenu');
   const startBtn = document.getElementById('startBtn');
   const leaderboardList = document.getElementById('leaderboardList');
-
+  const gameScreen = document.getElementById('gameScreen');
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-
-  const hud = document.getElementById('hud');
   const scoreDisplay = document.getElementById('scoreDisplay');
   const healthDisplay = document.getElementById('healthDisplay');
-
   const gameOverScreen = document.getElementById('gameOverScreen');
   const finalScoreText = document.getElementById('finalScoreText');
   const restartBtn = document.getElementById('restartBtn');
+  const shootBtn = document.getElementById('shootBtn');
 
-  const touchControls = document.getElementById('touchControls');
-  const shootButton = document.getElementById('shootButton');
-
-  // Game state
+  // Game variables
   let gameRunning = false;
   let score = 0;
-  let health = 3;
+  let keysPressed = {};
+  let enemies = [];
+  let bullets = [];
+  let lastEnemySpawn = 0;
+  let enemySpawnInterval = 1500;
+  let lastFrameTime = 0;
 
-  // For mobile dragging player vertically
-  let isDragging = false;
-
-  // Player config
+  // Player object
   const player = {
-    x: 50,
+    x: 60,
     y: 0,
     width: 48,
     height: 48,
-    speed: 7,
+    speed: 6,
+    health: 3
   };
 
-  let bullets = [];
-  let enemies = [];
+  // Load player image (simple spaceship)
+  const playerImg = new Image();
+  playerImg.src = "https://cdn-icons-png.flaticon.com/512/748/748061.png";
 
-  let lastEnemySpawn = 0;
-  let enemySpawnRate = 1400;
+  // Enemy image (alien)
+  const enemyImg = new Image();
+  enemyImg.src = "https://cdn-icons-png.flaticon.com/512/616/616408.png";
 
-  // Setup canvas for high DPI & resizing
-  function resize() {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
+  // Bullet speed
+  const bulletSpeed = 14;
 
-    player.y = window.innerHeight / 2 - player.height / 2;
+  // 3D starfield background setup
+  const starCount = 150;
+  let stars = [];
+
+  function initStars() {
+    stars = [];
+    for(let i=0; i < starCount; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        z: Math.random() * canvas.width
+      });
+    }
   }
-  window.addEventListener('resize', resize);
 
-  // Controls
-  let keys = {};
+  // Resize canvas function
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    player.y = canvas.height / 2 - player.height / 2;
+    initStars();
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+
+  // Input handling
   window.addEventListener('keydown', e => {
-    keys[e.key.toLowerCase()] = true;
-    if ((e.key === ' ' || e.key === 'Spacebar') && gameRunning) {
+    if (!gameRunning) return;
+    keysPressed[e.key.toLowerCase()] = true;
+
+    // Spacebar shoot
+    if(e.key === ' ' || e.key === 'Spacebar') {
       e.preventDefault();
-      fireBullet();
+      shoot();
     }
   });
   window.addEventListener('keyup', e => {
-    keys[e.key.toLowerCase()] = false;
-  });
-
-  // Mobile touch controls
-
-  // Shoot on tap button
-  shootButton.addEventListener('touchstart', e => {
-    e.preventDefault();
-    if (gameRunning) fireBullet();
-  });
-
-  // Drag to move player vertically (only vertical for simplicity)
-  canvas.addEventListener('touchstart', e => {
     if (!gameRunning) return;
-    const touch = e.touches[0];
-    if (
-      touch.clientX < window.innerWidth / 2
-    ) {
-      isDragging = true;
-      player.y = touch.clientY - player.height / 2;
-      clampPlayer();
-    }
+    keysPressed[e.key.toLowerCase()] = false;
   });
 
-  canvas.addEventListener('touchmove', e => {
-    if (!isDragging) return;
-    const touch = e.touches[0];
-    player.y = touch.clientY - player.height / 2;
-    clampPlayer();
+  // Shoot on mouse click anywhere on canvas (desktop)
+  canvas.addEventListener('mousedown', e => {
+    if (!gameRunning) return;
+    shoot();
   });
 
-  canvas.addEventListener('touchend', e => {
-    isDragging = false;
+  // Shoot button for mobile
+  shootBtn.addEventListener('touchstart', e => {
+    if (!gameRunning) return;
+    e.preventDefault();
+    shoot();
+  }, { passive: false });
+  shootBtn.addEventListener('mousedown', e => {
+    if (!gameRunning) return;
+    shoot();
   });
 
-  // Fire bullet
-  function fireBullet() {
+  // Shoot function
+  function shoot() {
+    if (!gameRunning) return;
     bullets.push({
       x: player.x + player.width,
       y: player.y + player.height / 2 - 6,
-      width: 18,
+      width: 12,
       height: 12,
-      speed: 16
+      speed: bulletSpeed
     });
   }
 
   // Spawn enemy
   function spawnEnemy() {
-    const enemySize = 48;
+    const size = 48;
     enemies.push({
-      x: window.innerWidth + enemySize,
-      y: Math.random() * (window.innerHeight - enemySize),
-      width: enemySize,
-      height: enemySize,
-      speed: 3 + Math.random() * 3,
-      angle: 0,
-      angleSpeed: (Math.random() * 0.1 + 0.03) * (Math.random() < 0.5 ? 1 : -1)
+      x: canvas.width + size,
+      y: Math.random() * (canvas.height - size),
+      width: size,
+      height: size,
+      speed: 3 + Math.random() * 2
     });
   }
 
-  // Collision check
-  function isColliding(a, b) {
-    return !(
-      b.x > a.x + a.width ||
-      b.x + b.width < a.x ||
-      b.y > a.y + a.height ||
-      b.y + b.height < a.y
-    );
-  }
-
-  // Clamp player inside screen
-  function clampPlayer() {
-    player.x = Math.max(0, Math.min(player.x, window.innerWidth - player.width));
-    player.y = Math.max(0, Math.min(player.y, window.innerHeight - player.height));
-  }
-
-  // Draw player - neon triangle with glow
-  function drawPlayer() {
-    ctx.save();
-    ctx.shadowColor = '#00ffff';
-    ctx.shadowBlur = 15;
-    ctx.fillStyle = '#0ff';
-
-    ctx.beginPath();
-    ctx.moveTo(player.x, player.y + player.height / 2);
-    ctx.lineTo(player.x + player.width, player.y);
-    ctx.lineTo(player.x + player.width, player.y + player.height);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  // Draw enemies - rotating red squares with glow
-  function drawEnemies() {
-    enemies.forEach(enemy => {
-      enemy.angle += enemy.angleSpeed;
-      const cx = enemy.x + enemy.width / 2;
-      const cy = enemy.y + enemy.height / 2;
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(enemy.angle);
-      ctx.shadowColor = '#ff4444';
-      ctx.shadowBlur = 14;
-      ctx.fillStyle = '#ff4444';
-
-      ctx.fillRect(-enemy.width / 2, -enemy.height / 2, enemy.width, enemy.height);
-      ctx.restore();
-    });
-  }
-
-  // Draw bullets - cyan rounded rects with glow
-  function drawBullets() {
-    ctx.fillStyle = '#0ff';
-    ctx.shadowColor = '#00ffff';
-    ctx.shadowBlur = 10;
-
-    bullets.forEach(bullet => {
-      const r = 6;
-      ctx.beginPath();
-      ctx.moveTo(bullet.x + r, bullet.y);
-      ctx.lineTo(bullet.x + bullet.width - r, bullet.y);
-      ctx.quadraticCurveTo(bullet.x + bullet.width, bullet.y, bullet.x + bullet.width, bullet.y + r);
-      ctx.lineTo(bullet.x + bullet.width, bullet.y + bullet.height - r);
-      ctx.quadraticCurveTo(bullet.x + bullet.width, bullet.y + bullet.height, bullet.x + bullet.width - r, bullet.y + bullet.height);
-      ctx.lineTo(bullet.x + r, bullet.y + bullet.height);
-      ctx.quadraticCurveTo(bullet.x, bullet.y + bullet.height, bullet.x, bullet.y + bullet.height - r);
-      ctx.lineTo(bullet.x, bullet.y + r);
-      ctx.quadraticCurveTo(bullet.x, bullet.y, bullet.x + r, bullet.y);
-      ctx.closePath();
-      ctx.fill();
-    });
-
-    ctx.shadowBlur = 0;
-  }
-
-  // Update game state
-  function update(delta) {
+  // Update game objects
+  function update(deltaTime) {
     if (!gameRunning) return;
 
-    // Player movement desktop
-    if (!isMobile) {
-      if (keys['w'] || keys['arrowup']) player.y -= player.speed;
-      if (keys['s'] || keys['arrowdown']) player.y += player.speed;
-      if (keys['a'] || keys['arrowleft']) player.x -= player.speed;
-      if (keys['d'] || keys['arrowright']) player.x += player.speed;
+    // Player movement
+    if (keysPressed['w'] || keysPressed['arrowup']) {
+      player.y -= player.speed;
+      if (player.y < 0) player.y = 0;
+    }
+    if (keysPressed['s'] || keysPressed['arrowdown']) {
+      player.y += player.speed;
+      if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
     }
 
-    clampPlayer();
-
-    // Bullets update
-    bullets.forEach((bullet, i) => {
-      bullet.x += bullet.speed;
-      if (bullet.x > window.innerWidth) bullets.splice(i, 1);
-    });
-
-    // Spawn enemies
-    if (Date.now() - lastEnemySpawn > enemySpawnRate) {
+    // Spawn enemies periodically
+    if (Date.now() - lastEnemySpawn > enemySpawnInterval) {
       spawnEnemy();
       lastEnemySpawn = Date.now();
+      // Gradually increase difficulty
+      if (enemySpawnInterval > 600) enemySpawnInterval -= 10;
     }
 
     // Update enemies
-    enemies.forEach((enemy, i) => {
-      enemy.x -= enemy.speed;
-      if (enemy.x + enemy.width < 0) enemies.splice(i, 1);
-    });
-
-    // Bullet-enemy collision
-    bullets.forEach((bullet, bi) => {
-      enemies.forEach((enemy, ei) => {
-        if (isColliding(bullet, enemy)) {
-          bullets.splice(bi, 1);
-          enemies.splice(ei, 1);
-          score += 10;
-          updateHUD();
-        }
-      });
-    });
-
-    // Enemy-player collision
-    enemies.forEach((enemy, i) => {
-      if (isColliding(enemy, player)) {
+    for (let i = enemies.length -1; i >= 0; i--) {
+      enemies[i].x -= enemies[i].speed;
+      if (enemies[i].x + enemies[i].width < 0) {
         enemies.splice(i, 1);
-        health -= 1;
-        updateHUD();
-        if (health <= 0) endGame();
       }
+    }
+
+    // Update bullets
+    for (let i = bullets.length -1; i >= 0; i--) {
+      bullets[i].x += bullets[i].speed;
+      if (bullets[i].x > canvas.width) {
+        bullets.splice(i, 1);
+      }
+    }
+
+    // Collision detection: bullets & enemies
+    for(let i = enemies.length -1; i >= 0; i--) {
+      const enemy = enemies[i];
+      for(let j = bullets.length -1; j >= 0; j--) {
+        const bullet = bullets[j];
+        if (isColliding(bullet, enemy)) {
+          enemies.splice(i, 1);
+          bullets.splice(j, 1);
+          score += 10;
+          break;
+        }
+      }
+    }
+
+    // Collision detection: enemies & player
+    for(let i = enemies.length -1; i >= 0; i--) {
+      if (isColliding(enemies[i], player)) {
+        enemies.splice(i, 1);
+        player.health -= 1;
+        if (player.health <= 0) {
+          endGame();
+        }
+      }
+    }
+
+    scoreDisplay.textContent = `Score: ${score}`;
+    healthDisplay.textContent = `Health: ${player.health}`;
+  }
+
+  // Simple AABB collision
+  function isColliding(a, b) {
+    return a.x < b.x + b.width &&
+           a.x + a.width > b.x &&
+           a.y < b.y + b.height &&
+           a.y + a.height > b.y;
+  }
+
+  // Draw functions
+  function drawPlayer() {
+    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+  }
+  function drawEnemies() {
+    enemies.forEach(e => {
+      ctx.drawImage(enemyImg, e.x, e.y, e.width, e.height);
+    });
+  }
+  function drawBullets() {
+    ctx.fillStyle = '#0ff';
+    bullets.forEach(b => {
+      ctx.beginPath();
+      ctx.arc(b.x + b.width/2, b.y + b.height/2, 6, 0, Math.PI*2);
+      ctx.fill();
     });
   }
 
-  // Draw everything
-  function draw() {
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  // Draw 3D starfield background
+  function draw3DBackground() {
+    // Dark blue background
+    ctx.fillStyle = '#001a33';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    ctx.fillStyle = '#0ff';
+    stars.forEach(star => {
+      star.z -= 5;
+      if (star.z <= 0) {
+        star.x = Math.random() * canvas.width;
+        star.y = Math.random() * canvas.height;
+        star.z = canvas.width;
+      }
+      const sx = (star.x - canvas.width/2) * (canvas.width/star.z) + canvas.width/2;
+      const sy = (star.y - canvas.height/2) * (canvas.width/star.z) + canvas.height/2;
+      const size = (canvas.width / star.z) * 2;
+      ctx.beginPath();
+      ctx.arc(sx, sy, size, 0, Math.PI*2);
+      ctx.fill();
+    });
+  }
+
+  // Main draw
+  function draw() {
+    draw3DBackground();
     drawPlayer();
     drawEnemies();
     drawBullets();
   }
 
-  // HUD update
-  function updateHUD() {
-    scoreDisplay.textContent = `Score: ${score}`;
-    healthDisplay.textContent = `Health: ${health}`;
-  }
-
   // Game loop
-  let lastTime = 0;
-  function gameLoop(timestamp) {
-    if (!lastTime) lastTime = timestamp;
-    const delta = timestamp - lastTime;
-    lastTime = timestamp;
+  function gameLoop(timestamp=0) {
+    if (!gameRunning) return;
 
-    update(delta);
+    let deltaTime = timestamp - lastFrameTime;
+    lastFrameTime = timestamp;
+
+    update(deltaTime);
     draw();
 
-    if (gameRunning) {
-      requestAnimationFrame(gameLoop);
-    }
+    requestAnimationFrame(gameLoop);
   }
 
-  // Start game
+  // Start the game
   function startGame() {
     score = 0;
-    health = 3;
-    player.x = 50;
-    player.y = window.innerHeight / 2 - player.height / 2;
-    bullets = [];
+    player.health = 3;
     enemies = [];
+    bullets = [];
+    enemySpawnInterval = 1500;
     lastEnemySpawn = 0;
-
-    mainMenu.style.display = 'none';
-    gameOverScreen.style.display = 'none';
-    hud.style.display = 'flex';
-
-    if (isMobile) {
-      touchControls.style.display = 'flex';
-    }
-
     gameRunning = true;
-    updateHUD();
-    gameLoop();
+    mainMenu.style.display = 'none';
+    gameScreen.style.display = 'block';
+    gameOverScreen.style.display = 'none';
+    resizeCanvas();
+    lastFrameTime = 0;
+    requestAnimationFrame(gameLoop);
   }
 
   // End game
   function endGame() {
     gameRunning = false;
-    hud.style.display = 'none';
-    touchControls.style.display = 'none';
-
-    finalScoreText.textContent = `Your final score: ${score}`;
+    finalScoreText.textContent = `Your Score: ${score}`;
     gameOverScreen.style.display = 'block';
+
+    // Submit score to Firebase
+    db.collection("leaderboard").add({
+      score: score,
+      timestamp: Date.now()
+    }).then(() => {
+      loadLeaderboard();
+    }).catch((err) => {
+      console.error("Error saving score:", err);
+    });
   }
 
+  // Restart game
   restartBtn.addEventListener('click', () => {
     startGame();
   });
 
+  // Start button
   startBtn.addEventListener('click', () => {
     startGame();
   });
 
-  // Leaderboard
-  async function loadLeaderboard() {
+  // Load leaderboard
+  function loadLeaderboard() {
     leaderboardList.innerHTML = '<li>Loading...</li>';
-    try {
-      const snapshot = await db.collection('leaderboard').orderBy('score', 'desc').limit(10).get();
-      if (snapshot.empty) {
-        leaderboardList.innerHTML = '<li>No scores yet</li>';
-        return;
-      }
-      leaderboardList.innerHTML = '';
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const li = document.createElement('li');
-        li.textContent = `${data.name || 'Anonymous'} - ${data.score}`;
-        leaderboardList.appendChild(li);
+    db.collection("leaderboard")
+      .orderBy("score", "desc")
+      .limit(10)
+      .get()
+      .then(snapshot => {
+        if (snapshot.empty) {
+          leaderboardList.innerHTML = '<li>No scores yet</li>';
+          return;
+        }
+        leaderboardList.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement('li');
+          li.textContent = `Score: ${data.score}`;
+          leaderboardList.appendChild(li);
+        });
+      }).catch(err => {
+        leaderboardList.innerHTML = '<li>Error loading leaderboard</li>';
+        console.error(err);
       });
-    } catch (e) {
-      leaderboardList.innerHTML = '<li>Failed to load</li>';
-      console.error(e);
-    }
   }
 
-  // Save score
-  async function saveScore(name, score) {
-    if (!name.trim()) name = 'Anonymous';
-    try {
-      await db.collection('leaderboard').add({ name, score, timestamp: Date.now() });
-      loadLeaderboard();
-    } catch (e) {
-      console.error("Failed to save score:", e);
-    }
-  }
-
-  // Prompt for name on game over and save
-  restartBtn.addEventListener('click', async () => {
-    const name = prompt('Enter your name for leaderboard:', 'Player');
-    if (name !== null) {
-      await saveScore(name.trim(), score);
-    }
-  });
-
-  // Detect mobile
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-  // Init
-  resize();
+  // Initial leaderboard load
   loadLeaderboard();
 
+  // Initial canvas size
+  resizeCanvas();
 </script>
 
 </body>
