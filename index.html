@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>THt Shooter Modern</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #0e0f1a;
+    font-family: 'Orbitron', sans-serif;
+    color: #0ff;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  #container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  canvas {
+    background: linear-gradient(135deg, #00111f, #002f5a);
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    image-rendering: pixelated;
+  }
+
+  /* UI */
+
+  #mainMenu, #gameOverScreen {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(4,12,28,0.85);
+    border-radius: 20px;
+    padding: 30px 40px;
+    box-shadow:
+      0 0 10px #00ffffaa,
+      0 0 30px #00ffff44 inset;
+    width: 90vw;
+    max-width: 320px;
+    text-align: center;
+    z-index: 20;
+  }
+  #mainMenu h1, #gameOverScreen h1 {
+    font-size: 3.2rem;
+    margin-bottom: 20px;
+    letter-spacing: 5px;
+    text-shadow: 0 0 8px #00ffffcc;
+  }
+
+  button {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    padding: 18px 0;
+    border-radius: 30px;
+    border: none;
+    background: linear-gradient(90deg, #00ffffcc 0%, #005566cc 100%);
+    color: #002d2d;
+    cursor: pointer;
+    box-shadow:
+      0 0 10px #00ffffcc,
+      0 0 30px #00ffff66 inset;
+    width: 100%;
+    transition: background 0.3s ease, color 0.3s ease;
+    user-select: none;
+    outline-offset: 4px;
+  }
+  button:active, button:hover {
+    background: linear-gradient(90deg, #00ffffee 0%, #0088aaee 100%);
+    color: #001f1f;
+  }
+
+  #leaderboard {
+    margin-top: 25px;
+    max-height: 160px;
+    overflow-y: auto;
+    border-top: 2px solid #00ffff88;
+    padding-top: 14px;
+  }
+  #leaderboard h2 {
+    margin: 0 0 14px 0;
+    font-weight: 700;
+    font-size: 1.3rem;
+    text-shadow: 0 0 6px #00ffff99;
+  }
+  #leaderboard ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    font-size: 1.1rem;
+    color: #00ffffcc;
+  }
+  #leaderboard li {
+    padding: 6px 0;
+    border-bottom: 1px solid #00ffff44;
+  }
+
+  /* HUD */
+  #hud {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-shadow: 0 0 8px #00ffffbb;
+    user-select: none;
+    pointer-events: none;
+    z-index: 15;
+  }
+  #hud span {
+    background: rgba(0,255,255,0.15);
+    padding: 8px 14px;
+    border-radius: 16px;
+    min-width: 90px;
+    text-align: center;
+  }
+  #hud .health {
+    background: rgba(255, 0, 0, 0.25);
+    color: #ff4b4b;
+    text-shadow: 0 0 10px #ff4b4bbb;
+  }
+
+  /* Mobile touch controls overlay */
+  #touchControls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 25;
+  }
+  #shootButton {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #00ffffaa;
+    box-shadow:
+      0 0 15px #00ffffcc,
+      0 0 40px #00ffff88 inset;
+    border: none;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #002d2d;
+    user-select: none;
+    cursor: pointer;
+    outline-offset: 4px;
+    transition: background 0.3s ease;
+  }
+  #shootButton:active {
+    background: #00ffffee;
+    box-shadow:
+      0 0 20px #00ffffff,
+      0 0 50px #00ffffcc inset;
+  }
+
+</style>
+</head>
+<body>
+
+<div id="container">
+
+  <div id="mainMenu">
+    <h1>THt Shooter</h1>
+    <button id="startBtn">Start Game</button>
+    <div id="leaderboard">
+      <h2>Leaderboard</h2>
+      <ul id="leaderboardList"><li>Loading...</li></ul>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="hud" style="display:none;">
+    <span id="scoreDisplay">Score: 0</span>
+    <span id="healthDisplay" class="health">Health: 3</span>
+  </div>
+
+  <div id="gameOverScreen" style="display:none;">
+    <h1>Game Over</h1>
+    <p id="finalScoreText"></p>
+    <button id="restartBtn">Play Again</button>
+  </div>
+
+  <div id="touchControls" style="display:none;">
+    <button id="shootButton">●</button>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA7X85cqiIAVxa5EuKeZDDg8hfAL_5-tn8",
+    authDomain: "dgame-aa237.firebaseapp.com",
+    projectId: "dgame-aa237",
+    storageBucket: "dgame-aa237.firebasestorage.app",
+    messagingSenderId: "908674004636",
+    appId: "1:908674004636:web:ac3e5a2eedcc73f1bd1f59",
+    measurementId: "G-T7CQ486WKV"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const container = document.getElementById('container');
+  const mainMenu = document.getElementById('mainMenu');
+  const startBtn = document.getElementById('startBtn');
+  const leaderboardList = document.getElementById('leaderboardList');
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const hud = document.getElementById('hud');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const healthDisplay = document.getElementById('healthDisplay');
+
+  const gameOverScreen = document.getElementById('gameOverScreen');
+  const finalScoreText = document.getElementById('finalScoreText');
+  const restartBtn = document.getElementById('restartBtn');
+
+  const touchControls = document.getElementById('touchControls');
+  const shootButton = document.getElementById('shootButton');
+
+  // Game state
+  let gameRunning = false;
+  let score = 0;
+  let health = 3;
+
+  // For mobile dragging player vertically
+  let isDragging = false;
+
+  // Player config
+  const player = {
+    x: 50,
+    y: 0,
+    width: 48,
+    height: 48,
+    speed: 7,
+  };
+
+  let bullets = [];
+  let enemies = [];
+
+  let lastEnemySpawn = 0;
+  let enemySpawnRate = 1400;
+
+  // Setup canvas for high DPI & resizing
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+
+    player.y = window.innerHeight / 2 - player.height / 2;
+  }
+  window.addEventListener('resize', resize);
+
+  // Controls
+  let keys = {};
+  window.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if ((e.key === ' ' || e.key === 'Spacebar') && gameRunning) {
+      e.preventDefault();
+      fireBullet();
+    }
+  });
+  window.addEventListener('keyup', e => {
+    keys[e.key.toLowerCase()] = false;
+  });
+
+  // Mobile touch controls
+
+  // Shoot on tap button
+  shootButton.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (gameRunning) fireBullet();
+  });
+
+  // Drag to move player vertically (only vertical for simplicity)
+  canvas.addEventListener('touchstart', e => {
+    if (!gameRunning) return;
+    const touch = e.touches[0];
+    if (
+      touch.clientX < window.innerWidth / 2
+    ) {
+      isDragging = true;
+      player.y = touch.clientY - player.height / 2;
+      clampPlayer();
+    }
+  });
+
+  canvas.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    player.y = touch.clientY - player.height / 2;
+    clampPlayer();
+  });
+
+  canvas.addEventListener('touchend', e => {
+    isDragging = false;
+  });
+
+  // Fire bullet
+  function fireBullet() {
+    bullets.push({
+      x: player.x + player.width,
+      y: player.y + player.height / 2 - 6,
+      width: 18,
+      height: 12,
+      speed: 16
+    });
+  }
+
+  // Spawn enemy
+  function spawnEnemy() {
+    const enemySize = 48;
+    enemies.push({
+      x: window.innerWidth + enemySize,
+      y: Math.random() * (window.innerHeight - enemySize),
+      width: enemySize,
+      height: enemySize,
+      speed: 3 + Math.random() * 3,
+      angle: 0,
+      angleSpeed: (Math.random() * 0.1 + 0.03) * (Math.random() < 0.5 ? 1 : -1)
+    });
+  }
+
+  // Collision check
+  function isColliding(a, b) {
+    return !(
+      b.x > a.x + a.width ||
+      b.x + b.width < a.x ||
+      b.y > a.y + a.height ||
+      b.y + b.height < a.y
+    );
+  }
+
+  // Clamp player inside screen
+  function clampPlayer() {
+    player.x = Math.max(0, Math.min(player.x, window.innerWidth - player.width));
+    player.y = Math.max(0, Math.min(player.y, window.innerHeight - player.height));
+  }
+
+  // Draw player - neon triangle with glow
+  function drawPlayer() {
+    ctx.save();
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = '#0ff';
+
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y + player.height / 2);
+    ctx.lineTo(player.x + player.width, player.y);
+    ctx.lineTo(player.x + player.width, player.y + player.height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Draw enemies - rotating red squares with glow
+  function drawEnemies() {
+    enemies.forEach(enemy => {
+      enemy.angle += enemy.angleSpeed;
+      const cx = enemy.x + enemy.width / 2;
+      const cy = enemy.y + enemy.height / 2;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(enemy.angle);
+      ctx.shadowColor = '#ff4444';
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = '#ff4444';
+
+      ctx.fillRect(-enemy.width / 2, -enemy.height / 2, enemy.width, enemy.height);
+      ctx.restore();
+    });
+  }
+
+  // Draw bullets - cyan rounded rects with glow
+  function drawBullets() {
+    ctx.fillStyle = '#0ff';
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 10;
+
+    bullets.forEach(bullet => {
+      const r = 6;
+      ctx.beginPath();
+      ctx.moveTo(bullet.x + r, bullet.y);
+      ctx.lineTo(bullet.x + bullet.width - r, bullet.y);
+      ctx.quadraticCurveTo(bullet.x + bullet.width, bullet.y, bullet.x + bullet.width, bullet.y + r);
+      ctx.lineTo(bullet.x + bullet.width, bullet.y + bullet.height - r);
+      ctx.quadraticCurveTo(bullet.x + bullet.width, bullet.y + bullet.height, bullet.x + bullet.width - r, bullet.y + bullet.height);
+      ctx.lineTo(bullet.x + r, bullet.y + bullet.height);
+      ctx.quadraticCurveTo(bullet.x, bullet.y + bullet.height, bullet.x, bullet.y + bullet.height - r);
+      ctx.lineTo(bullet.x, bullet.y + r);
+      ctx.quadraticCurveTo(bullet.x, bullet.y, bullet.x + r, bullet.y);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    ctx.shadowBlur = 0;
+  }
+
+  // Update game state
+  function update(delta) {
+    if (!gameRunning) return;
+
+    // Player movement desktop
+    if (!isMobile) {
+      if (keys['w'] || keys['arrowup']) player.y -= player.speed;
+      if (keys['s'] || keys['arrowdown']) player.y += player.speed;
+      if (keys['a'] || keys['arrowleft']) player.x -= player.speed;
+      if (keys['d'] || keys['arrowright']) player.x += player.speed;
+    }
+
+    clampPlayer();
+
+    // Bullets update
+    bullets.forEach((bullet, i) => {
+      bullet.x += bullet.speed;
+      if (bullet.x > window.innerWidth) bullets.splice(i, 1);
+    });
+
+    // Spawn enemies
+    if (Date.now() - lastEnemySpawn > enemySpawnRate) {
+      spawnEnemy();
+      lastEnemySpawn = Date.now();
+    }
+
+    // Update enemies
+    enemies.forEach((enemy, i) => {
+      enemy.x -= enemy.speed;
+      if (enemy.x + enemy.width < 0) enemies.splice(i, 1);
+    });
+
+    // Bullet-enemy collision
+    bullets.forEach((bullet, bi) => {
+      enemies.forEach((enemy, ei) => {
+        if (isColliding(bullet, enemy)) {
+          bullets.splice(bi, 1);
+          enemies.splice(ei, 1);
+          score += 10;
+          updateHUD();
+        }
+      });
+    });
+
+    // Enemy-player collision
+    enemies.forEach((enemy, i) => {
+      if (isColliding(enemy, player)) {
+        enemies.splice(i, 1);
+        health -= 1;
+        updateHUD();
+        if (health <= 0) endGame();
+      }
+    });
+  }
+
+  // Draw everything
+  function draw() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    drawPlayer();
+    drawEnemies();
+    drawBullets();
+  }
+
+  // HUD update
+  function updateHUD() {
+    scoreDisplay.textContent = `Score: ${score}`;
+    healthDisplay.textContent = `Health: ${health}`;
+  }
+
+  // Game loop
+  let lastTime = 0;
+  function gameLoop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const delta = timestamp - lastTime;
+    lastTime = timestamp;
+
+    update(delta);
+    draw();
+
+    if (gameRunning) {
+      requestAnimationFrame(gameLoop);
+    }
+  }
+
+  // Start game
+  function startGame() {
+    score = 0;
+    health = 3;
+    player.x = 50;
+    player.y = window.innerHeight / 2 - player.height / 2;
+    bullets = [];
+    enemies = [];
+    lastEnemySpawn = 0;
+
+    mainMenu.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    hud.style.display = 'flex';
+
+    if (isMobile) {
+      touchControls.style.display = 'flex';
+    }
+
+    gameRunning = true;
+    updateHUD();
+    gameLoop();
+  }
+
+  // End game
+  function endGame() {
+    gameRunning = false;
+    hud.style.display = 'none';
+    touchControls.style.display = 'none';
+
+    finalScoreText.textContent = `Your final score: ${score}`;
+    gameOverScreen.style.display = 'block';
+  }
+
+  restartBtn.addEventListener('click', () => {
+    startGame();
+  });
+
+  startBtn.addEventListener('click', () => {
+    startGame();
+  });
+
+  // Leaderboard
+  async function loadLeaderboard() {
+    leaderboardList.innerHTML = '<li>Loading...</li>';
+    try {
+      const snapshot = await db.collection('leaderboard').orderBy('score', 'desc').limit(10).get();
+      if (snapshot.empty) {
+        leaderboardList.innerHTML = '<li>No scores yet</li>';
+        return;
+      }
+      leaderboardList.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement('li');
+        li.textContent = `${data.name || 'Anonymous'} - ${data.score}`;
+        leaderboardList.appendChild(li);
+      });
+    } catch (e) {
+      leaderboardList.innerHTML = '<li>Failed to load</li>';
+      console.error(e);
+    }
+  }
+
+  // Save score
+  async function saveScore(name, score) {
+    if (!name.trim()) name = 'Anonymous';
+    try {
+      await db.collection('leaderboard').add({ name, score, timestamp: Date.now() });
+      loadLeaderboard();
+    } catch (e) {
+      console.error("Failed to save score:", e);
+    }
+  }
+
+  // Prompt for name on game over and save
+  restartBtn.addEventListener('click', async () => {
+    const name = prompt('Enter your name for leaderboard:', 'Player');
+    if (name !== null) {
+      await saveScore(name.trim(), score);
+    }
+  });
+
+  // Detect mobile
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  // Init
+  resize();
+  loadLeaderboard();
+
+</script>
+
+</body>
+</html>
