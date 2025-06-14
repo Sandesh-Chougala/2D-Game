@@ -19,10 +19,20 @@ let player = {
 };
 
 let score = 0;
+let obstacleSpeed = 4;
+let obstacleSpawnInterval = 1500; // milliseconds
+let obstacles = [];
 
 function drawPlayer() {
   ctx.fillStyle = player.color;
   ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+function drawObstacles() {
+  ctx.fillStyle = "#ff3b3b";
+  obstacles.forEach(obs => {
+    ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+  });
 }
 
 function handleInput() {
@@ -35,43 +45,102 @@ function handleInput() {
     player.dx = player.speed;
   }
 
-  // Jump
   if ((keys["Space"] || keys["ArrowUp"]) && player.grounded) {
     player.dy = jumpPower;
     player.grounded = false;
   }
 }
 
-function update() {
+function updateObstacles(deltaTime) {
+  obstacles.forEach(obs => {
+    obs.x -= obstacleSpeed;
+  });
+
+  // Remove obstacles that moved off screen
+  obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+}
+
+function spawnObstacle() {
+  // Random height between 20 and 60
+  const height = 20 + Math.random() * 40;
+  const obs = {
+    x: canvas.width,
+    y: canvas.height - height,
+    width: 20 + Math.random() * 30,
+    height: height
+  };
+  obstacles.push(obs);
+}
+
+// Simple AABB collision detection
+function isColliding(a, b) {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
+  );
+}
+
+let lastObstacleSpawn = 0;
+let lastTime = 0;
+
+function gameLoop(timestamp = 0) {
+  const deltaTime = timestamp - lastTime;
+  lastTime = timestamp;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   handleInput();
 
-  // Apply movement
+  // Player physics and movement
   player.x += player.dx;
   player.dy += gravity;
   player.y += player.dy;
 
-  // Floor collision
   if (player.y + player.height >= canvas.height) {
     player.y = canvas.height - player.height;
     player.dy = 0;
     player.grounded = true;
   }
 
-  // Wall collision - game over
-  if (player.x + player.width >= canvas.width || player.x <= 0) {
+  // Prevent player going outside left boundary
+  if (player.x < 0) player.x = 0;
+  // Game over if player hits right boundary
+  if (player.x + player.width >= canvas.width) {
     endGame();
     return;
   }
 
+  // Spawn obstacles on interval
+  if (timestamp - lastObstacleSpawn > obstacleSpawnInterval) {
+    spawnObstacle();
+    lastObstacleSpawn = timestamp;
+
+    // Increase difficulty by reducing spawn interval and increasing speed
+    if (obstacleSpawnInterval > 600) obstacleSpawnInterval -= 20;
+    obstacleSpeed += 0.05;
+  }
+
+  updateObstacles(deltaTime);
+
+  // Draw player and obstacles
   drawPlayer();
+  drawObstacles();
+
+  // Check collisions
+  for (const obs of obstacles) {
+    if (isColliding(player, obs)) {
+      endGame();
+      return;
+    }
+  }
 
   // Update score
   score++;
   document.getElementById("scoreDisplay").innerText = `Score: ${score}`;
 
-  frameId = requestAnimationFrame(update);
+  frameId = requestAnimationFrame(gameLoop);
 }
 
 function endGame() {
@@ -151,5 +220,5 @@ document.getElementById("jumpBtn").addEventListener("touchend", (e) => {
   keys["Space"] = false;
 });
 
-// Start game loop
-update();
+// Start the game loop
+requestAnimationFrame(gameLoop);
